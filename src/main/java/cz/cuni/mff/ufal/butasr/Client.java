@@ -68,12 +68,12 @@ public class Client {
 
         final CompletableFuture<String> receivedTranscript = CompletableFuture.supplyAsync(() -> {
             try {
-                return new String(inputStream.readAllBytes());
+                return new String(inputStream.readAllBytes()).replaceAll("[^\n]*\\r", "");
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
             //input.transferTo(System.out);
         }, executorService);
-        return CompletableFuture.allOf(sendAudio, receivedTranscript).thenApply( future -> receivedTranscript.join());
+        return CompletableFuture.allOf(sendAudio, receivedTranscript).thenApply( ignored -> receivedTranscript.join());
     }
 }

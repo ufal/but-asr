@@ -20,12 +20,14 @@ public class Asr {
     @Produces(MediaType.TEXT_PLAIN)
     public String getTranscript(@PathParam("lang") String lang, InputStream inputStream){
         try {
-            final java.nio.file.Path file = Files.createTempFile("example", "wav");
-            System.out.println(file.toAbsolutePath());
+            //System.out.println(file.toAbsolutePath());
+            final java.nio.file.Path file = Files.createTempFile("asr_lid_fileupload_", null);
             Files.copy(inputStream, file, StandardCopyOption.REPLACE_EXISTING);
-            return client.getTranscriptOfWav(file).get();
+            String transcriptOfWav = client.getTranscriptOfWav(file).get();
+            file.toFile().delete();
+            return transcriptOfWav;
         } catch (IOException | InterruptedException | ExecutionException e) {
-            return "err";
+            return e.getMessage();
         }
     }
 
