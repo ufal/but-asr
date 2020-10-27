@@ -9,7 +9,7 @@ import javax.ws.rs.core.Response;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @Path("asr")
@@ -22,7 +22,7 @@ public class Asr {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
-    public String getTranscript(@PathParam("lang") String lang, IMultipartBody body){
+    public CompletableFuture<String> getTranscript(@PathParam("lang") String lang, IMultipartBody body){
         if(body == null){
             throw new WebApplicationException("No multipart body", Response.Status.BAD_REQUEST);
         }
@@ -41,14 +41,14 @@ public class Asr {
                     // AudioSystem has issues recognizing the wav when passed as InputStream, saving to a tmp file
                     // There'll probably be some preprocessing in the future
                     Files.copy(inputStream, file, StandardCopyOption.REPLACE_EXISTING);
-                    return client.getTranscriptOfWav(file).get();
+                    return client.getTranscriptOfWav(file);
                 } finally {
                     if(file != null) {
                         file.toFile().delete();
                     }
                 }
             }
-        } catch (IOException | InterruptedException | ExecutionException e) {
+        } catch (IOException e) {
             throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
