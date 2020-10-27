@@ -54,12 +54,16 @@ public class Client {
         }
     }
 
-    public CompletableFuture<String> getTranscriptOfWav(Path path){
+    public CompletableFuture<String> getTranscriptOfWav(Path path) {
+        return getTranscriptOfWav(path.toFile());
+    }
+
+    public CompletableFuture<String> getTranscriptOfWav(File file){
         if(socket.isConnected()){
             open();
         }
         final CompletableFuture<Void> sendAudio = CompletableFuture.runAsync(() -> {
-            try(final AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(path.toFile())){
+            try(final AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file)){
                 audioInputStream.transferTo(outputStream);
             } catch (IOException | UnsupportedAudioFileException e) {
                 throw new IllegalStateException(e);
