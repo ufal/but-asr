@@ -3,6 +3,9 @@ package cz.cuni.mff.ufal.butasr.boundary;
 import com.ibm.websphere.jaxrs20.multipart.IAttachment;
 import com.ibm.websphere.jaxrs20.multipart.IMultipartBody;
 import cz.cuni.mff.ufal.butasr.control.ButSoundClient;
+import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.Metered;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -19,6 +22,9 @@ public class ButSoundResource {
     @Inject
     ButSoundClient client;
 
+    @Timed(name="asrProcessingTime")
+    @Counted(name="asrAccessCount")
+    @Metered(name="asrMeter")
     @Path("/asr/{lang}")
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -27,6 +33,9 @@ public class ButSoundResource {
         return process("asr." + lang, body);
     }
 
+    @Timed(name="lidProcessingTime")
+    @Counted(name="lidAccessCount")
+    @Metered(name="lidMeter")
     @Path("/lid")
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -35,6 +44,9 @@ public class ButSoundResource {
         return process("lid", body);
     }
 
+    @Timed(name="processProcessingTime")
+    @Counted(name="processAccessCount")
+    @Metered(name="processMeter")
     private String process(String serviceName, IMultipartBody body){
         if(body == null){
             throw new WebApplicationException("No multipart body", Response.Status.BAD_REQUEST);
@@ -66,11 +78,14 @@ public class ButSoundResource {
         }
     }
 
+    @Timed(name="testProcessingTime")
+    @Counted(name="testAccessCount")
+    @Metered(name="testMeter")
     @GET
-    @Path("/test")
+    @Path("/ping")
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.TEXT_PLAIN)
-    public String test(){
-        return "test";
+    public String ping(){
+        return "pong";
     }
 }
