@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+    web:
+        build: ./
+        ports:
+          - "9080:9080"
+        environment:
+                - but_asr_en_host=asr-en
+                - but_asr_en_port=5050
+                - but_lid_host=lid
+                - but_lid_port=5050
+    lid:
+         image: but-lid
+    asr-en:
+         image: but-asr_en
