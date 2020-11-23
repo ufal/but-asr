@@ -6,11 +6,21 @@ services:
         ports:
           - "9080:9080"
         environment:
-                - but_asr_en_host=asr-en
-                - but_asr_en_port=5050
-                - but_lid_host=lid
-                - but_lid_port=5050
+                #- but_asr_en_host=asr-en
+                - but_asr_en_host=balancer
+                - but_asr_en_port=12346
+                  #- but_lid_host=lid
+                - but_lid_host=balancer
+                - but_lid_port=12345
+    balancer:
+        build: 
+          context: .
+          dockerfile: ./Dockerfile.nginx
     lid:
          image: but-lid
+         deploy:
+           replicas: 2
     asr-en:
          image: but-asr_en
+         deploy:
+           replicas: 2
