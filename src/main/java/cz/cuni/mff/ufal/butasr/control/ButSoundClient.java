@@ -1,6 +1,5 @@
 package cz.cuni.mff.ufal.butasr.control;
 
-import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.enterprise.context.ApplicationScoped;
@@ -13,12 +12,15 @@ import java.net.Socket;
 import java.nio.file.Path;
 import java.util.NoSuchElementException;
 import java.util.concurrent.*;
+import java.util.logging.Logger;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class ButSoundClient {
+
+    private static Logger log = Logger.getLogger(ButSoundClient.class.getName());
 
     @Resource
     private ManagedExecutorService executorService;
@@ -47,6 +49,7 @@ public class ButSoundClient {
         try {
            return new Socket(host, port);
         } catch (IOException e) {
+            log.severe(String.format("Failed to open socket to '%s:%s'", host, port));
             throw new IllegalStateException(e);
         }
     }
