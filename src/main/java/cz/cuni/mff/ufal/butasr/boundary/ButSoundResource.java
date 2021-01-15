@@ -8,6 +8,9 @@ import org.eclipse.microprofile.metrics.annotation.Metered;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -15,9 +18,13 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.ExecutionException;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 @Path("/")
 public class ButSoundResource {
+    private static final Logger log = Logger.getLogger(ButSoundResource.class.getName());
 
     @Inject
     ButSoundClient client;
@@ -39,9 +46,30 @@ public class ButSoundResource {
     @Path("/lid")
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces("text/plain;qs=0.75")
     public String lid(IMultipartBody body) {
         return process("lid", body);
+    }
+
+
+    @Timed(name="lidJsonProcessingTime")
+    @Counted(name="lidJsonAccessCount")
+    @Metered(name="lidJsonMeter")
+    @Path("/lid")
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces("application/json;qs=1.0")
+    public JsonObject lidJson(IMultipartBody body) {
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        String[] textResponseParts = process("lid", body).trim().split(" ");
+        log.fine(() -> String.format("There are %s parts in the response", textResponseParts.length));
+        for(int i=0; i< textResponseParts.length; i+=2 ){
+            log.fine(String.format("Processing part %s value is '%s'", i, textResponseParts[i]));
+            String key = textResponseParts[i].toLowerCase().substring(0, textResponseParts[i].length()-1);
+            String value = textResponseParts[i+1];
+            builder.add(key, value);
+        }
+        return builder.build();
     }
 
     @Timed(name="processProcessingTime")
