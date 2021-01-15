@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Path("/")
 public class ButSoundResource {
@@ -35,9 +36,28 @@ public class ButSoundResource {
     @Path("/asr/{lang}")
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces("text/plain;qs=0.75")
     public String getTranscript(@PathParam("lang") String lang, IMultipartBody body) {
         return process("asr." + lang, body);
+    }
+
+    @Timed(name="asrJsonProcessingTime")
+    @Counted(name="asrJsonAccessCount")
+    @Metered(name="asrJsonMeter")
+    @Path("/asr/{lang}")
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces("application/json;qs=1.0")
+    public JsonObject getTranscriptJson(@PathParam("lang") String lang, IMultipartBody body) {
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        String transcript = process("asr." + lang, body)
+                .lines()
+                .map(this::removeTiming)
+                .map(this::removeSpecWords)
+                .collect(Collectors.joining())
+                .trim();
+        builder.add("speech", transcript);
+        return builder.build();
     }
 
     @Timed(name="lidProcessingTime")
@@ -115,5 +135,13 @@ public class ButSoundResource {
     @Produces(MediaType.TEXT_PLAIN)
     public String ping(){
         return "pong";
+    }
+
+    private String removeTiming(String transcriptLine){
+        return transcriptLine.replaceFirst("[0-9. ]* ", "");
+    }
+
+    private String removeSpecWords(String s) {
+        return s.replaceAll("<[^>]*>", "");
     }
 }
